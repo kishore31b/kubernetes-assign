@@ -1,0 +1,75 @@
+﻿On master
+
+Step 1: Install Docker
+sudo apt-get update				#Update the package list with the command:
+sudo apt-get install docker.io	#install Docker with the command:
+
+Step 2: Start and Enable Docker
+sudo systemctl enable docker	#Set Docker to launch at boot by entering the following:
+sudo systemctl status docker	#Verify Docker is running:
+(sudo systemctl start docker)	#To start Docker if it’s not running:
+
+Step 3: Add Kubernetes Signing Key
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add #Enter the following to add a signing key:
+(sudo apt-get install curl)		#If you get an error that curl is not installed, install it with:
+Then repeat the previous command to install the signing keys. Repeat for each server node.
+
+Step 4: Add Software Repositories
+sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main" #Kubernetes is not included in the default repositories. To add them, enter the following:
+
+Step 5: Kubernetes Installation Tools
+sudo apt-get install kubeadm kubelet kubectl
+sudo apt-mark hold kubeadm kubelet kubectl  #Install Kubernetes tools with the command:
+kubeadm version				    #Verify the installation with:
+
+Step 6: Begin Kubernetes Deployment
+sudo swapoff –a   #Start by disabling the swap memory on each server:
+
+Step 7: Assign Unique Hostname for Each Server Node 
+sudo hostnamectl set-hostname master-node		#ecide which server to set as the master node. Then enter the command:
+
+Step 8: Initialize Kubernetes on Master Node
+sudo kubeadm init --pod-network-cidr=10.244.0.0/16		#Switch to the master server node
+kubernetes-master:~$ mkdir -p $HOME/.kube		        #enter the following to create a directory for the cluster:
+kubernetes-master:~$ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+kubernetes-master:~$ sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Step 9: Deploy Pod Network to Cluster
+sudo kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml  #A Pod Network is a way to allow communication between different nodes in the cluster. This tutorial uses the flannel virtual network.
+kubectl get pods --all-namespaces									      #Verify that everything is running and communicating:
+
+Step 10: Join Worker Node to Cluster
+As indicated in Step 7, you can enter the kubeadm join command on each worker node to connect it to the cluster.
+
+Switch to the worker01 system and enter the command you noted from Step 7:
+
+kubeadm join --discovery-token abcdef.1234567890abcdef --discovery-token-ca-cert-hash sha256:1234..cdef 1.2.3.4:6443
+
+
+On nodes
+
+Step 1: Install Docker
+sudo apt-get update				#Update the package list with the command:
+sudo apt-get install docker.io	#install Docker with the command:
+
+Step 2: Start and Enable Docker
+sudo systemctl enable docker	#Set Docker to launch at boot by entering the following:
+sudo systemctl status docker	#Verify Docker is running:
+(sudo systemctl start docker)	#To start Docker if it’s not running:
+
+Step 3: Add Software Repositories
+sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main" #Kubernetes is not included in the default repositories. To add them, enter the following:
+
+
+Step 4: Kubernetes Installation Tools
+sudo apt-get install kubeadm kubelet kubectl
+sudo apt-mark hold kubeadm kubelet kubectl  #Install Kubernetes tools with the command:
+kubeadm version			#Verify the installation with:
+
+Step 5: Assign Unique Hostname for Each Server Node 
+sudo hostnamectl set-hostname worker01		#set a worker node hostname by entering the following on the worker server:
+
+
+
+
+https://phoenixnap.com/kb/install-kubernetes-on-ubuntu   for reference 
