@@ -10,6 +10,9 @@ The team wants you to create two services to expose these two components:-
 
 auth-deployment.yaml
 ------------------------
+
+vi auth-deployment.yml
+
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -35,6 +38,27 @@ spec:
         ports:
         - containerPort: 80
           protocol: TCP
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-svc
+  labels:
+    app: auth
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 80
+  selector:
+    app: auth-app
+	
+kubectl create -f auth-deployment.yml
+deployment.apps/auth-deployment created
+service/auth-svc created
+
+kubectl get svc # to list the services
 
 
 
@@ -66,6 +90,26 @@ spec:
         ports:
         - containerPort: 80
           protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-svc
+  labels:
+    app: data
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 80
+  selector:
+    app: data
+
+
+kubectl create -f data-deployment.yml
+deployment.apps/data-deployment created
+service/data-svc created
 
 
 Examine the two deployments, and create two services that meet the following criteria:

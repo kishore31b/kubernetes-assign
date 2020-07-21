@@ -21,3 +21,109 @@ The container should be limited to 128MiB of memory and 500m CPU (use resource l
 The container needs access to a database password in order to authenticate with a backend database server. The password is Kub3rn3t3sRul3s!. It should be stored in a secure fashion (as a Kubernetes secret called db-password) and passed to the container as an environment variable called DB_PASSWORD.
 
 Good luck!
+
+------------------------------
+
+cd /etc
+mkdir candy-service
+cd candy-service
+vi candy.cfg
+
+candy.peppermint.power=100000000
+candy.nougat-armor.strength=10
+
+
+---------
+
+root@ip-172-31-7-111:/etc/candy-service# echo -n 'Kub3rn3t3sRul3s!' | base64
+S3ViM3JuM3Qzc1J1bDNzIQ==
+root@ip-172-31-7-111:/etc/candy-service#
+
+vi secret.yml
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-password
+stringData:
+  DB_PASSWORD: S3ViM3JuM3Qzc1J1bDNzIQ==
+  
+kubectl create -f secret.yaml
+secret/db-password created
+
+-------------
+
+vi candy-service-config.yml
+
+apiVersion : v1
+kind: ConfigMap
+metadata: 
+   name: candy-service-config
+data:
+  config: |-
+    ---
+    :candy.peppermint.power: 100000000
+    :candy.nougat-armor.strength: 10        
+
+kubectl create -f candy-service-config.yml
+configmap/candy-service-config created
+
+
+------------------
+
+On Node1:
+sudo useradd -u 2020 container-user-0
+sudo groupadd -g 2000 container-group-0
+
+----------------
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: candy-service
+  labels:
+    app: web
+spec:
+  securityContext:
+    fsGroup: 2000
+  containers:
+  - name: candy-service-ctr
+    image: linuxacademycontent/candy-service:1
+    env:
+    - name: db-password
+      valueFrom:
+        secretKeyRef:
+          name: db-password
+          key: DB_PASSWORD
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        cpu: "500m"
+        memory: "128Mi"
+    volumeMounts:
+    - name: candy-service-config
+      mountPath: /etc/candy-service
+  volumes:
+  - name: candy-service-config
+    configMap:
+       name: candy-service-config
+       items:
+        - key: config
+          path: candy.cfg      
+		  
+
+kubectl create -f candy-service.yml
+pod/candy-service created
+		  
+		  
+kubectl exec candy-service -- cat /etc/candy-service/candy.cfg
+
+
+:candy.peppermint.power: 100000000
+:candy.nougat-armor.strength: 10master 
+
+$ kubectl exec candy-service -- ls /etc/candy-service/
+candy.cfg
+

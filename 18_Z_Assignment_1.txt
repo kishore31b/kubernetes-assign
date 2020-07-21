@@ -8,6 +8,9 @@ Your company's developers have just finished developing a new version of their c
 
 candy-deployment.yaml
 --------------------------
+
+vi candy-deployment.yml
+
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -21,6 +24,7 @@ spec:
     metadata:
       labels:
         app: candy-ws
+
     spec:
       containers:
       - image: linuxacademycontent/candy-service:2
@@ -32,4 +36,26 @@ You have been asked to update the image for the container named candy-ws in this
 After you have updated the image using a rolling update, check on the status of the update to make sure it is working. If it is not working, perform a rollback to the previous state.
 
 Make sure that the rolling update is in such a way that atleast 25% of pods are up and running during update with Zero downtime.
+
+
+kubectl set image deployment/candy-deployment candy-ws=linuxacademycontent/candy-service:3  --record=true
+deployment.apps/candy-deployment image updated
+
+
+kubectl rollout history deployment/candy-deployment
+deployment.apps/candy-deployment
+REVISION  CHANGE-CAUSE
+1         <none>
+2         kubectl set image deployment/candy-deployment candy-ws=linuxacademycontent/candy-service:3 --record=true
+
+-----------------
+
+kubectl rollout undo deployment/candy-deployment --to-revision=1
+deployment.apps/candy-deployment rolled back
+
+kubectl rollout history deployment/candy-deployment
+deployment.apps/candy-deployment 
+REVISION  CHANGE-CAUSE
+2         kubectl set image deployment/candy-deployment candy-ws=linuxacademycontent/candy-service:3 --record=true
+3         <none>
 

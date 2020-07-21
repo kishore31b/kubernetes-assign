@@ -13,3 +13,83 @@ Set the command to nginx
 Pass in the -g daemon off; -q args to run nginx in quiet mode.
 Create the pod in the web namespace.
 Once the pod is created, you should be able to find it with kubectl get pods -n web. Once the pod is created, you can get more information about its current status with kubectl describe pod nginx -n web.
+
+
+$ kubectl create ns web
+
+namespace/web created
+
+root@ip-172-31-7-111:/home/ubuntu# kubectl get namespace
+NAME              STATUS   AGE
+default           Active   29m
+kube-node-lease   Active   29m
+kube-public       Active   29m
+kube-system       Active   29m
+web               Active   65s
+
+
+$ vi nginx.yml
+ 
+apiVersion: v1
+kind: Pod
+metadata:
+ name: nginx-pod
+ labels:
+  app: nginx-app
+spec:
+ containers:
+ - name: nginx-ctr
+   image: nginx:latest
+   command: ["nginx","-g","daemon off;","-q"]
+   ports:
+   - containerPort: 8080
+
+$ kubectl create -f nginx.yml -n web
+
+pod/nginx-pod created
+
+root@ip-172-31-7-111:/home/ubuntu# kubectl get pods -n web
+NAME        READY   STATUS    RESTARTS   AGE
+nginx-pod   0/1     Pending   0          31s
+
+root@ip-172-31-7-111:/home/ubuntu# kubectl describe pod nginx-pod -n web
+Name:         nginx-pod
+Namespace:    web
+Priority:     0
+Node:         <none>
+Labels:       app=nginx-app
+Annotations:  <none>
+Status:       Pending
+IP:
+IPs:          <none>
+Containers:
+  nginx-ctr:
+    Image:      nginx:latest
+    Port:       8080/TCP
+    Host Port:  0/TCP
+    Command:
+      nginx
+      -g
+      daemon off;
+      -q
+    Environment:  <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-ffm5t (ro)
+Conditions:
+  Type           Status
+  PodScheduled   False
+Volumes:
+  default-token-ffm5t:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-ffm5t
+    Optional:    false
+QoS Class:       BestEffort
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute for 300s
+                 node.kubernetes.io/unreachable:NoExecute for 300s
+Events:
+  Type     Reason            Age                 From               Message
+  ----     ------            ----                ----               -------
+  Warning  FailedScheduling  24s (x3 over 108s)  default-scheduler  0/1 nodes are available: 1 node(s) had taint {node-role.kubernetes.io/master: }, that the pod didn't tolerate.
+
+
